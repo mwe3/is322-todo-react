@@ -50,3 +50,76 @@ const reducer = (state = initial, action) => {
 
 export default reducer;
 
+/////////////// ACTION DISPATCHER FUNCTIONS///////////////////
+
+export const getAllTasks = () => dispatch => {
+  axios.get(`https://api.cosmicjs.com/v1/${config.bucket.slug}/object-type/tasks`)
+    .then((response) => {
+      return response.data;
+    })
+    .then((tasks) => {
+      dispatch(getTasks(tasks))
+    })
+    .catch((err) => {
+      console.error.bind(err);
+    })
+};
+
+export const postNewTask = (task) => dispatch => {
+  // dispatch(addTask({title: task, metafields: [{value: false}], slug: formatSlug(task)}));
+  axios.post(`https://api.cosmicjs.com/v1/${config.bucket.slug}/add-object`, {type_slug: "tasks", title: task, content: "New Task",
+    metafields: [
+      {
+        title: "Is Complete",
+        key: "is_complete",
+        value: false,
+        type: "text"
+      }
+    ]})
+    .then((response) => {
+      return response.data;
+    })
+    .then((task) => {
+      dispatch(addTask(task.object));
+    })
+    .catch((err) => {
+      console.error.bind(err);
+    })
+};
+
+export const putChangeStatus = (task, bool) => (dispatch) => {
+  // dispatch(changeStatus(task));
+  axios.put(`https://api.cosmicjs.com/v1/${config.bucket.slug}/edit-object`, {slug: task.slug,
+    metafields: [
+      {
+        title: "Is Complete",
+        key: "is_complete",
+        value: !bool,
+        type: "text"
+      }
+    ]})
+    .then((response) => {
+      return response.data;
+    })
+    .then((task) => {
+      dispatch(changeStatus(task.object));
+    })
+    .catch((err) => {
+      console.error.bind(err);
+    })
+};
+
+export const deleteTask = (slug) => (dispatch) => {
+  dispatch(taskDelete(slug));
+  axios.delete(`https://api.cosmicjs.com/v1/${config.bucket.slug}/${slug}`)
+    .then((response) => {
+    })
+    .catch((err) => {
+      console.error.bind(err);
+    })
+};
+
+const formatSlug = (title) => {
+  return title.toLowerCase().split(" ").join("-");
+};
+
